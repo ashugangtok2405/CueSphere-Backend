@@ -57,8 +57,12 @@ Built in phases. **B1 (done): log in and browse.**
 - Matches: `GET /matches/:id`, `/matches/open`, `/matches/:id/{head-to-head,friendly-stats}`, `/clubs/:slug/matches/{live,scorable}`
 - Photos: `GET /api/player-photo/:playerId/:version` (same address as the website)
 
-Next: **B2** player actions (join, register, profile & photo, follow, friends, bookings) ·
-**B3** friendlies, live scoring, live updates · **B4** staff (tables & billing, dues, income,
+**B2 (done): player actions** — `POST /clubs/:slug/join`, `POST /clubs/:slug/tournaments/:tslug/register`,
+`PUT /profiles/me`, `PUT /profiles/me/primary-club`, `POST /profiles/me/photo` (multipart `file`),
+`POST|DELETE /follows/:playerId`, `POST /friendships`, `POST /friendships/:id/respond`, `DELETE /friendships/:id`,
+`POST /clubs/:slug/bookings`, `POST /clubs/:slug/bookings/:id/cancel`.
+
+Next: **B3** friendlies, live scoring, live updates · **B4** staff (tables & billing, dues, income,
 tournaments, fixtures, gallery, settings, TV & stream) · **B5** platform admin.
 
 Privacy: other players' profiles never include email, mobile, date of birth or emergency contact.
