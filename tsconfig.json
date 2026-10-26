@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/shims/*", "../snooker/src/*"],
+      "next/cache": ["./src/shims/next/cache.ts"],
+      "next/server": ["./src/shims/next/server.ts"],
+      "next/headers": ["./src/shims/next/headers.ts"],
+      "next/navigation": ["./src/shims/next/navigation.ts"]
+    }
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "cuesphere-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CueSphere mobile API (/api/v1). Runs the website's own services and actions (../snooker/src) against the same Supabase project.",
+  "scripts": {
+    "dev": "tsx watch --env-file=../snooker/.env.local --env-file-if-exists=.env src/server.ts",
+    "start": "tsx --env-file=../snooker/.env.local --env-file-if-exists=.env src/server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "@supabase/supabase-js": "^2.111.0",
+    "hono": "^4.13.14"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}
