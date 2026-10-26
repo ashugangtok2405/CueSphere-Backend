@@ -13,7 +13,7 @@ import type { Club } from '@/types/club';
 import type { ClubTournament } from '@/types/club-tournament';
 
 import { HttpError, ok, requireUser } from '../http';
-import { clubBySlug, idList, myProfile, requireProfile } from '../lookups';
+import { clubBySlug, idList, myProfile, requireProfile, tournamentOf } from '../lookups';
 
 export const tournaments = new Hono();
 
@@ -61,12 +61,6 @@ tournaments.get('/clubs/:slug/tournaments', async (c) => {
   return ok(c, await Promise.all(list.map((t) => forList(t, club, profile?.id ?? null))));
 });
 
-async function tournamentOf(slug: string, tslug: string) {
-  const club = await clubBySlug(slug);
-  const t = await getClubTournamentBySlug(club.id, tslug);
-  if (!t) throw new HttpError(404, 'Tournament not found.');
-  return { club, t };
-}
 
 tournaments.get('/clubs/:slug/tournaments/:tslug', async (c) => {
   const [{ club, t }, profile] = await Promise.all([tournamentOf(c.req.param('slug'), c.req.param('tslug')), myProfile()]);

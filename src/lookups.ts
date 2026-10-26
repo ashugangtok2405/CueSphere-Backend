@@ -1,15 +1,42 @@
 import { getSession } from '@/lib/auth/session';
-import { getClubBySlug } from '@/services/club-service';
+import { getClubById, getClubBySlug, getMembership } from '@/services/club-service';
+import { getClubTournamentById, getClubTournamentBySlug } from '@/services/club-tournament-service';
 import { getProfileByUserId } from '@/services/profile-service';
-import type { Club } from '@/types/club';
+import { isScorekeeperOnly, isStaffRole, type Club } from '@/types/club';
 import type { PlayerProfile } from '@/types/player-profile';
 
 import { HttpError, requireUser } from './http';
 
-export async function clubBySlug(slug: string): Promise<Club> {
-  const club = await getClubBySlug(slug);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const isUuid = (value: string) => UUID.test(value);
+
+/** A club by its slug — or by its id, which some screens have to hand (e.g. a match's clubId). */
+export async function clubBySlug(slugOrId: string): Promise<Club> {
+  const club = (await getClubBySlug(slugOrId)) ?? (isUuid(slugOrId) ? await getClubById(slugOrId) : undefined);
   if (!club) throw new HttpError(404, 'Club not found.');
   return club;
+}
+
+/** A club's tournament by its slug, or by id (staff screens open tournaments by id). */
+export async function tournamentOf(clubSlug: string, slugOrId: string) {
+  const club = await clubBySlug(clubSlug);
+  let t = await getClubTournamentBySlug(club.id, slugOrId);
+  if (!t && isUuid(slugOrId)) {
+    const byId = await getClubTournamentById(slugOrId);
+    if (byId?.clubId === club.id) t = byId;
+  }
+  if (!t) throw new HttpError(404, 'Tournament not found.');
+  return { club, t };
+}
+
+/** Club staff who run the club (not scorekeeper-only accounts) — the website's requireClubManager. */
+export async function requireManager(club: Club) {
+  const user = await requireUser();
+  const membership = await getMembership(club.id, user.id);
+  if (!isStaffRole(membership?.role) || isScorekeeperOnly(membership?.role)) {
+    throw new HttpError(403, "You don't have permission to manage this club.");
+  }
+  return user;
 }
 
 /** The caller's own player profile (created at first sign-in), or null when signed out. */
