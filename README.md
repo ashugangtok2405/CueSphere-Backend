@@ -62,7 +62,22 @@ Built in phases. **B1 (done): log in and browse.**
 `POST|DELETE /follows/:playerId`, `POST /friendships`, `POST /friendships/:id/respond`, `DELETE /friendships/:id`,
 `POST /clubs/:slug/bookings`, `POST /clubs/:slug/bookings/:id/cancel`.
 
-Next: **B3** friendlies, live scoring, live updates · **B4** staff (tables & billing, dues, income,
-tournaments, fixtures, gallery, settings, TV & stream) · **B5** platform admin.
+**B3 (done): friendlies & live scoring** — `POST /friendlies`, `POST /friendlies/:id/{respond,cancel,start,confirm,dispute}`,
+`PATCH /matches/:id/{status,live,progress}`, `POST /matches/:id/{finish,result}`. Live updates: the website’s
+actions broadcast on Supabase Realtime (`live:match:<id>`, `live:club:<clubId>`); the app listens there
+directly with the public key (the signals carry no data).
+
+**B4 (done): staff** — tables board (`GET /clubs/:slug/table-overview`, `table-summary`, `table-sessions/outstanding`,
+`table-players/search`), `POST|PUT /clubs/:slug/tables[/:id]`, `POST /tables/:id/start`, `/table-sessions/:id/{stop,settle}`,
+`/table-charges/:id/pay`, `/bookings/:id/{respond,no-show}`, dues (`GET /dues`, `POST /dues/{collect,remind}`),
+`GET /reports/income`, `GET /registrations`, `PATCH /registrations/:id/payment-status`, tournaments
+(`POST /clubs/:slug/tournaments`, `PATCH|DELETE …/:tslug`, `POST …/thumbnail`, scorekeepers), fixtures
+(`PUT /clubs/:slug/matches/tournaments/:id/fixtures` — saving fixtures releases the draw, as on the website),
+gallery, `PATCH /clubs/:slug`, `POST /clubs/:slug/{logo,cover}`, TV screens and stream settings.
+
+**B5 (done): opening a club & platform admin** — `POST /clubs` (the website’s Create Your Club: a pending club
+with you as its admin), `POST /platform/clubs/:id/{approve,reject}`, `GET /platform/clubs/:id/owner`.
+The website has no club-enquiry step, so `/club-enquiries` and `/platform/club-enquiries` return empty lists and
+the app sends “Create your club” straight to the club form.
 
 Privacy: other players' profiles never include email, mobile, date of birth or emergency contact.
