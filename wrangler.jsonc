@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // The CueSphere API for the mobile app: https://cuesphere-api.ashugangtok.workers.dev/api/v1
+  // Keys come from secrets (npm run secrets), never this file.
+  "name": "cuesphere-api",
+  "main": "src/worker.ts",
+  // One tsconfig for every file, the website's included, so its @/… and next/… imports
+  // resolve to src/shims first (as they do under tsx).
+  "tsconfig": "tsconfig.json",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Run next to the database (Supabase, AWS Mumbai), like the website.
+  "placement": { "region": "aws:ap-south-1" },
+  "observability": { "enabled": true }
+}
