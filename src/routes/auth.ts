@@ -1,10 +1,11 @@
 import { createClient, type Session } from '@supabase/supabase-js';
 import { Hono } from 'hono';
 
+import { changePasswordAction } from '@/app/actions/account-actions';
 import { loginAction, registerAccountAction } from '@/app/actions/auth-actions';
 import { getViewer } from '@/lib/auth/get-viewer';
-import { getClubById } from '@/services/club-service';
-import { listMembershipsForUser } from '@/services/club-service';
+import { mustChangePasswordCached } from '@/services/auth-service';
+import { getClubById, listMembershipsForUser } from '@/services/club-service';
 
 import { ctx } from '../context';
 import { body, fail, ok, requireUser, unwrap } from '../http';
@@ -72,7 +73,7 @@ auth.post('/auth/signout', async (c) => {
  * platform-admin flag on the user and the approved clubs the viewer runs. */
 auth.get('/viewer', async (c) => {
   const user = await requireUser();
-  const [viewer, memberships] = await Promise.all([getViewer(), listMembershipsForUser(user.id)]);
+  const [viewer, memberships, mustChangePassword] = await Promise.all([getViewer(), listMembershipsForUser(user.id), mustChangePasswordCached(user.id)]);
   const adminClubs = await Promise.all(memberships.filter((m) => m.role === 'club_admin').map((m) => getClubById(m.clubId)));
   const ownedClubs = adminClubs
     .filter((club) => club?.status === 'approved')
@@ -86,6 +87,16 @@ auth.get('/viewer', async (c) => {
     pendingClubCount: viewer.pendingClubCount,
     // The website has no separate club-enquiry step; new clubs wait as "pending" clubs.
     pendingEnquiryCount: 0,
+    /** A club owner still on the temporary password the platform admin gave them. */
+    mustChangePassword,
     ownedClubs,
   });
+});
+
+/** POST /auth/password — the website's changePasswordAction (also clears the temporary-password flag). */
+auth.post('/auth/password', async (c) => {
+  await requireUser();
+  const { password, confirmPassword } = await body<{ password?: string; confirmPassword?: string }>(c);
+  unwrap(await changePasswordAction({ password: password ?? '', confirmPassword: confirmPassword ?? '' }));
+  return ok(c, null);
 });

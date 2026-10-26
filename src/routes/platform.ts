@@ -1,15 +1,14 @@
 import { Hono } from 'hono';
 
-import { createClubAction } from '@/app/actions/club-actions';
-import { approveClubAction, rejectClubAction } from '@/app/actions/platform-actions';
-import { getClubBySlug, isPlatformAdmin, listMembershipsForClub } from '@/services/club-service';
+import { approveClubAction, createClubAccountAction, rejectClubAction } from '@/app/actions/platform-actions';
+import { isPlatformAdmin, listMembershipsForClub } from '@/services/club-service';
 import { getProfileByUserIdForDisplay } from '@/services/profile-service';
 
 import { body, HttpError, ok, requireUser, unwrap } from '../http';
 
-/** B5 — opening a club and the platform admin's review, the website's way: "Create Your
- * Club" makes a pending club (you become its admin) and a platform admin approves or
- * rejects it. The website has no separate enquiry step, so the app's enquiry lists are empty. */
+/** Clubs and the platform admin, the website's way: owners get in touch, and the platform
+ * admin creates their club account (their login + the club, approved with its trial
+ * running). There's no self sign-up, so the old create-club routes point owners to us. */
 export const platform = new Hono();
 
 async function requirePlatformAdmin() {
@@ -18,24 +17,19 @@ async function requirePlatformAdmin() {
   return user;
 }
 
-type NewClub = { name?: string; tagline?: string; stateCode?: string; cityId?: string; newCity?: string };
+const CONTACT_US = 'Clubs are set up by the CueSphere team. Message us on WhatsApp at +91 79045 51660 and we’ll create your club.';
 
-async function createClub(input: NewClub) {
-  await requireUser();
-  const { slug } = unwrap(
-    await createClubAction({ name: input.name ?? '', tagline: input.tagline, stateCode: input.stateCode ?? '', cityId: input.cityId ?? '', newCity: input.newCity })
-  );
-  return getClubBySlug(slug);
-}
+platform.post('/clubs', () => {
+  throw new HttpError(403, CONTACT_US);
+});
+platform.post('/club-enquiries', () => {
+  throw new HttpError(403, CONTACT_US);
+});
 
-/** POST /clubs — the website's Create Your Club: the club starts pending, you're its admin. */
-platform.post('/clubs', async (c) => ok(c, await createClub(await body<NewClub>(c)), 201));
-
-/** The app's old two-step request maps onto the same thing: the request is the pending club. */
-platform.post('/club-enquiries', async (c) => {
-  const b = await body<{ clubName?: string; stateCode?: string; cityId?: string }>(c);
-  const club = await createClub({ name: b.clubName, stateCode: b.stateCode, cityId: b.cityId });
-  return ok(c, club, 201);
+/** POST /platform/club-accounts — the website's createClubAccountAction (platform admins only). */
+platform.post('/platform/club-accounts', async (c) => {
+  const result = unwrap(await createClubAccountAction(await body(c)));
+  return ok(c, result, 201);
 });
 
 platform.get('/club-enquiries', async (c) => {
