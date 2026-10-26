@@ -112,18 +112,30 @@ tournaments.get('/clubs/:slug/registrations/mine', async (c) => {
 });
 
 /** Champion / runner-up: the admin's declared result first, else what the finished rounds show. */
-async function resultsFor(t: ClubTournament, matches: Awaited<ReturnType<typeof getMatchesForTournament>>): Promise<TournamentResults> {
+type PlacedPlayer = { id: string; name: string; photoUrl: string | null };
+type Results = { champion: PlacedPlayer | null; runnerUp: PlacedPlayer | null; semifinalists: PlacedPlayer[] };
+
+/** Adds each placed player's photo (the website's results carry only id and name). */
+async function withPhoto(p: { id: string; name: string } | null): Promise<PlacedPlayer | null> {
+  if (!p) return null;
+  const profile = await getProfileById(p.id);
+  return { id: p.id, name: p.name, photoUrl: profile?.profilePhotoUrl || null };
+}
+
+async function resultsFor(t: ClubTournament, matches: Awaited<ReturnType<typeof getMatchesForTournament>>): Promise<Results> {
+  let r: TournamentResults = computeTournamentResults(matches);
   if (t.championId) {
     const [champ, runner] = await Promise.all([getProfileById(t.championId), t.runnerUpId ? getProfileById(t.runnerUpId) : Promise.resolve(undefined)]);
     if (champ) {
-      return {
+      r = {
         champion: { id: champ.id, name: champ.fullName },
         runnerUp: runner ? { id: runner.id, name: runner.fullName } : null,
         semifinalists: [],
       };
     }
   }
-  return computeTournamentResults(matches);
+  const [champion, runnerUp, semifinalists] = await Promise.all([withPhoto(r.champion), withPhoto(r.runnerUp), Promise.all(r.semifinalists.map(withPhoto))]);
+  return { champion, runnerUp, semifinalists: semifinalists.filter((p): p is PlacedPlayer => !!p) };
 }
 
 /** GET /matches/tournaments/:id — the draw (hidden from players until it's published) and results. */
