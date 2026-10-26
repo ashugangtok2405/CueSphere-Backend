@@ -4,11 +4,13 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 
 import { servePlayerPhoto } from '@/app/api/player-photo/serve';
+import { getSession } from '@/lib/auth/session';
 
 import { newContext, requestContext } from './context';
 import { HttpError } from './http';
 import { auth } from './routes/auth';
 import { clubs } from './routes/clubs';
+import { playerActions } from './routes/player-actions';
 import { players } from './routes/players';
 import { tournaments } from './routes/tournaments';
 import type { NavigationError } from './shims/next/navigation';
@@ -25,6 +27,13 @@ app.use('*', async (c, next) => {
   const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
   const store = newContext(token);
   await requestContext.run(store, async () => {
+    // A token that's there but no longer valid gets a 401 up front, so the app refreshes
+    // it (the website's actions would only say "You must be logged in." with a 422).
+    // Sign-in, sign-up and refresh work without a valid token.
+    if (token && !c.req.path.startsWith('/api/v1/auth/') && !(await getSession())) {
+      c.res = c.json({ success: false, message: 'Your session has expired. Please log in again.' }, 401);
+      return;
+    }
     await next();
     // after(): live-update signals and push notifications, once the reply is on its way.
     const tasks = store.after.splice(0);
@@ -45,6 +54,7 @@ api.route('/', auth);
 api.route('/', clubs);
 api.route('/', tournaments);
 api.route('/', players);
+api.route('/', playerActions);
 app.route('/api/v1', api);
 
 app.notFound((c) => c.json({ success: false, message: `No such endpoint: ${c.req.method} ${c.req.path}` }, 404));
