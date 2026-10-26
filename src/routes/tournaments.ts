@@ -123,13 +123,14 @@ async function withPhoto(p: { id: string; name: string } | null): Promise<Placed
 }
 
 async function resultsFor(t: ClubTournament, matches: Awaited<ReturnType<typeof getMatchesForTournament>>): Promise<Results> {
-  let r: TournamentResults = computeTournamentResults(matches);
+  const r: TournamentResults = computeTournamentResults(matches);
   if (t.championId) {
     const [champ, runner] = await Promise.all([getProfileById(t.championId), t.runnerUpId ? getProfileById(t.runnerUpId) : Promise.resolve(undefined)]);
+    // The declared result: the profiles are already in hand, photos included.
     if (champ) {
-      r = {
-        champion: { id: champ.id, name: champ.fullName },
-        runnerUp: runner ? { id: runner.id, name: runner.fullName } : null,
+      return {
+        champion: { id: champ.id, name: champ.fullName, photoUrl: champ.profilePhotoUrl || null },
+        runnerUp: runner ? { id: runner.id, name: runner.fullName, photoUrl: runner.profilePhotoUrl || null } : null,
         semifinalists: [],
       };
     }

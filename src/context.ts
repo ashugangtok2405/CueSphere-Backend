@@ -14,6 +14,8 @@ export interface RequestContext {
   storage: Map<string, string>;
   /** Work queued with next/server's after(): runs once the response is sent. */
   after: (() => unknown)[];
+  /** React `cache` results for this request (see shims/react.ts). */
+  memo: Map<unknown, unknown>;
 }
 
 // The website's files load as CommonJS and the backend's as ES modules, so this file can
@@ -29,5 +31,5 @@ export function ctx(): RequestContext {
 }
 
 export function newContext(token: string | null): RequestContext {
-  return { token, user: null, storage: new Map(), after: [] };
+  return { token, user: null, storage: new Map(), after: [], memo: new Map() };
 }

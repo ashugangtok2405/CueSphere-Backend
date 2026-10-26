@@ -52,7 +52,8 @@ clubs.get('/clubs', async (c) => {
 
 clubs.get('/clubs/memberships/by-user/:userId', async (c) => ok(c, await listMembershipsForUser(c.req.param('userId'))));
 
-clubs.get('/clubs/:slug', async (c) => ok(c, await clubBySlug(c.req.param('slug'))));
+/** A club with its tournament and member counts (one request for the club screens, not two). */
+clubs.get('/clubs/:slug', async (c) => ok(c, await withCounts(await clubBySlug(c.req.param('slug')))));
 
 /** GET /viewer/clubs/:slug — the website's getClubViewer: your membership, unread
  * notifications, active registration and current match at this club. */
