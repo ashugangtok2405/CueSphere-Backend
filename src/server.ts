@@ -11,6 +11,7 @@ import { HttpError } from './http';
 import { auth } from './routes/auth';
 import { clubs } from './routes/clubs';
 import { playerActions } from './routes/player-actions';
+import { clubPages } from './routes/club-pages';
 import { platform } from './routes/platform';
 import { players } from './routes/players';
 import { scoring } from './routes/scoring';
@@ -61,6 +62,7 @@ api.route('/', playerActions);
 api.route('/', scoring);
 api.route('/', staff);
 api.route('/', platform);
+api.route('/', clubPages);
 app.route('/api/v1', api);
 
 app.notFound((c) => c.json({ success: false, message: `No such endpoint: ${c.req.method} ${c.req.path}` }, 404));
