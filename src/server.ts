@@ -12,6 +12,7 @@ import { auth } from './routes/auth';
 import { clubs } from './routes/clubs';
 import { playerActions } from './routes/player-actions';
 import { players } from './routes/players';
+import { scoring } from './routes/scoring';
 import { tournaments } from './routes/tournaments';
 import type { NavigationError } from './shims/next/navigation';
 
@@ -55,6 +56,7 @@ api.route('/', clubs);
 api.route('/', tournaments);
 api.route('/', players);
 api.route('/', playerActions);
+api.route('/', scoring);
 app.route('/api/v1', api);
 
 app.notFound((c) => c.json({ success: false, message: `No such endpoint: ${c.req.method} ${c.req.path}` }, 404));
